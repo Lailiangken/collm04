@@ -1,0 +1,1 @@
+コード生成中にエラーが発生しました: 'NoneType' object has no attribute 'initiate_chat'

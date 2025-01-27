@@ -1,0 +1,7 @@
+langchain
+langchain-community
+pyautogen
+pandas>=2.1.0
+python-dotenv
+openai
+streamlit>=1.30.0

@@ -1,0 +1,11 @@
+{
+    "name": "user_proxy",
+    "system_message": "あなたはユーザーの代理として振る舞います。ユーザーの意図を理解し、適切に他のエージェントに伝えてください。",
+    "human_input_mode": "NEVER",
+    "max_consecutive_auto_reply": 10,
+    "code_execution_config": {
+        "work_dir": "coding",
+        "use_docker": false
+    },
+    "is_termination_msg": "タスク完了"
+}
