@@ -1,1 +1,0 @@
-コード生成中にエラーが発生しました: 'ChatResult' object has no attribute 'last_message'
