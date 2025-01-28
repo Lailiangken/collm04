@@ -64,29 +64,33 @@ docker-compose down
 - すべての結果は`output`ディレクトリに自動保存
 - ディレクトリ構造:
 collm/ 
-├── app.py # Streamlitメインアプリケーション 
-├── code_review.py # コードレビュー機能 
-├── get_chat_response.py # OpenAI API通信 
-├── autogen_functions/ # 自動生成機能 
-│ └── factory.py # 機能生成ファクトリー 
-│ ├── docker/ # Docker関連 
-│ ├── Dockerfile # Dockerイメージ定義 
-│ └── docker-compose.yml # Docker環境設定 
-│ ├── requirements.txt # 依存パッケージ一覧 
-├── .env # 環境変数設定 
-├── .gitignore # Git除外設定 
-├── README.md # プロジェクト説明 
-│ └── output/ # 生成結果の出力先 
-├── code_review/ # レビュー結果 
-│ └── YYYYMMDD_HHMMSS_query/ 
-│ ├── generated_result.md 
-│ ├── query.txt 
-│ └── conversation.txt 
-│ └── code_generator/ # コード生成結果 
-└── YYYYMMDD_HHMMSS_query/ 
-├── generated_result.py 
-├── query.txt 
-└── conversation.txt
+├── app.py                      # Streamlitメインアプリケーション
+├── code_review.py             # コードレビュー機能
+├── get_chat_response.py       # OpenAI API通信
+├── autogen_functions/         # 自動生成機能
+│   └── factory.py            # 機能生成ファクトリー
+│
+├── docker/                    # Docker関連
+│   ├── Dockerfile            # Dockerイメージ定義
+│   └── docker-compose.yml    # Docker環境設定
+│
+├── requirements.txt          # 依存パッケージ一覧
+├── .env                      # 環境変数設定
+├── .gitignore               # Git除外設定
+├── README.md                # プロジェクト説明
+│
+└── output/                  # 生成結果の出力先
+    ├── code_review/         # レビュー結果
+    │   └── YYYYMMDD_HHMMSS_query/
+    │       ├── generated_result.md
+    │       ├── query.txt
+    │       └── conversation.txt
+    │
+    └── code_generator/      # コード生成結果
+        └── YYYYMMDD_HHMMSS_query/
+            ├── generated_result.py
+            ├── query.txt
+            └── conversation.txt
 
 ### 高度な使用方法
 - APIキーの動的変更が可能
