@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import shutil
 from pathlib import Path
 from datetime import datetime
 from autogen_functions.factory import create_llm_function
@@ -10,11 +11,6 @@ from typing import get_type_hints
 # 環境変数の読み込み
 load_dotenv()
 
-def get_available_functions():
-    return {
-        'コードレビュー': 'コードレビュー',
-        'コード生成': 'コード生成'
-    }
 
 def save_generated_result(result: str, query: str, chat_history: list, function_type: str, file_extension: str = "py") -> str:
     """
@@ -94,6 +90,20 @@ def create_input_field(name: str, param_info: dict):
     else:
         return st.text_input(f"{name}")
 
+def cleanup_working_directory(working_dir: str = "coding") -> None:
+    """
+    ワーキングフォルダの中身を削除する
+    
+    Args:
+        working_dir: 削除対象のディレクトリ名
+    """
+    working_path = Path(working_dir)
+    if working_path.exists():
+        shutil.rmtree(working_path)
+        working_path.mkdir(exist_ok=True)
+
+from autogen_functions.factory import get_available_functions
+
 def main():
     st.title("Code Assistant")
     
@@ -111,22 +121,24 @@ def main():
     function_class = create_llm_function(selected_function)
     
     if function_class:
-        # クラスの__call__メソッドのパラメータ情報を取得
         parameters = get_function_parameters(function_class)
-        
-        # 入力値を格納する辞書
         input_values = {}
         
-        # パラメータごとに入力フィールドを生成
         for name, param_info in parameters.items():
             input_values[name] = create_input_field(name, param_info)
-        if st.button("実行") and api_key and all(v for v in input_values.values() if v is not None):
+
+        if 'processing' not in st.session_state:
+            st.session_state.processing = False
+
+        button_text = "処理中..." if st.session_state.processing else "実行"
+        if st.button(button_text, disabled=st.session_state.processing) and api_key and all(v for v in input_values.values() if v is not None):
             try:
+                st.session_state.processing = True
                 with st.spinner("処理中..."):
                     instance = function_class()
                     result = instance(**input_values)
                     print(result)
-                    # 結果の保存と表示
+                    
                     if selected_function == 'コード生成':
                         saved_path = save_generated_result(
                             result=result,
@@ -146,11 +158,24 @@ def main():
                             function_type='code_review',
                             file_extension="md"
                         )
-                        st.markdown(result)                    
+                        st.markdown(result)
+                    elif selected_function in ['グループコード生成', 'グループチャット']:
+                        saved_path = save_generated_result(
+                            result=result,
+                            query=input_values.get('requirements', ''),
+                            chat_history=instance.get_chat_history(),
+                            function_type='group_chat',
+                            file_extension="md"
+                        )
+                        st.markdown(result)                
+                st.session_state.processing = False
+                cleanup_working_directory()
+                
             except Exception as e:
                 st.error(f"エラーが発生しました: {str(e)}")
+                st.session_state.processing = False
+                cleanup_working_directory()
     if not api_key:
         st.warning("OpenAI APIキーを入力してください。")
-
 if __name__ == "__main__":
     main()  

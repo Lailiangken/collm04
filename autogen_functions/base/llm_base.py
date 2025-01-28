@@ -2,7 +2,7 @@ import os
 import json
 from typing import Dict
 from pathlib import Path
-from autogen import UserProxyAgent, AssistantAgent
+from autogen_agentchat.agents import UserProxyAgent, AssistantAgent
 import inspect
 
 # 必須パラメータの定義

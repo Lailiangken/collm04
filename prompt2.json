@@ -1,9 +1,0 @@
-{
-    "model": "gpt-4",
-    "messages": [
-        {
-            "role": "user",
-            "content": "ホームランを打ったら、どんなセリフを言う？"
-        }
-    ]
-}
