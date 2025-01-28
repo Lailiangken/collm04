@@ -24,7 +24,7 @@ class CodeGeneratorFunction(LLMBaseFunction):
                 current_block = []
                 
                 for line in lines:
-                    if line.strip().startswith('```'):
+                    if line.strip().startswith('```python'):
                         if in_code_block:
                             # コードブロックの終了を検出したら、現在のブロックを保存
                             code_blocks.append('\n'.join(current_block))

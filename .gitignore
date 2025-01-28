@@ -34,6 +34,7 @@ env/
 
 # 出力ディレクトリ
 output/
+coding/
 
 # ログファイル
 *.log
