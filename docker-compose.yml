@@ -1,14 +1,39 @@
-services:
-  app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    image: collm-app
-    container_name: collm-app
-    ports:
-      - "8502:8502"
-    env_file:
-      - .env
-    environment:
-      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
-    command: streamlit run group_chat_app.py --server.address=0.0.0.0 --server.port 8502
+  version: '3.8'
+
+  services:
+    app:
+      build: 
+        context: .
+        dockerfile: Dockerfile
+      image: collm-app
+      container_name: collm-app
+      privileged: true  # コンテナがホストのDockerデーモンにアクセスできるようにする
+      ports:
+        - "8502:8502"
+      volumes:
+        - type: bind
+          source: /var/run/docker.sock
+          target: /var/run/docker.sock
+        - type: bind
+          source: .
+          target: /app
+        - type: volume
+          source: workspace
+          target: /workspace
+      env_file:
+        - .env
+      environment:
+        - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+        - DOCKER_HOST=unix:///var/run/docker.sock
+
+      command: streamlit run group_chat_app.py --server.address=0.0.0.0 --server.port 8502
+      networks:
+        - app-network
+      restart: unless-stopped
+
+  networks:
+    app-network:
+      driver: bridge
+
+  volumes:
+    workspace:

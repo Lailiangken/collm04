@@ -19,6 +19,13 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.cache/
+
+.pytest_cache/
+.mypy_cache/
+.tox/
+.coverage
+.coverage.*
 
 # 仮想環境
 venv/

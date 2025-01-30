@@ -1,25 +1,29 @@
 FROM python:3.12-slim
 
-# システムパッケージの更新
-RUN apt-get update && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends \
-        git \
-        build-essential \
+# Dockerデーモン関連のパッケージをより確実にインストール
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-dev \
+    libyaml-dev \
+    gcc \
+    make \
+    pkg-config \
+    docker.io \
+    docker-compose \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
 
-# Python パッケージの更新
-COPY requirements.txt .
+
+
+WORKDIR /app
+COPY . .
+
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-
-# 環境変数の設定
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 ENV TZ=Asia/Tokyo
 
-# Streamlitのポート設定
 EXPOSE 8502

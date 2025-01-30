@@ -1,8 +1,18 @@
+# Core dependencies
 langchain
 langchain-community
-pandas>=2.1.0
+pandas
 python-dotenv
 openai
-streamlit>=1.30.0
+
+# UI
+streamlit
+
+# AutoGen related
+autogen-core
 autogen-agentchat
 autogen-ext[openai,azure]
+autogen-ext[docker]
+
+# Docker related
+PyYAML<7.0,>=5.4
