@@ -35,6 +35,7 @@ env/
 # 出力ディレクトリ
 output/
 coding/
+work/
 
 # ログファイル
 *.log
