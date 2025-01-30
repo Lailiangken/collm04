@@ -1,0 +1,10 @@
+{
+    "model": "gpt-4o",
+    "vision": false,
+    "function_calling": true,
+    "json_output": true,
+    "family": "GPT_4",
+    "api_key": "ENV",
+    "temperature": 0.7,
+    "max_tokens": 2000
+}

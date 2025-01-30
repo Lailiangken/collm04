@@ -1,6 +1,16 @@
 import streamlit as st
 from autogen_functions.group_chat.group_chat_043 import run_group_chat
 
+def format_task_result(task_result):
+    """Format the TaskResult object into Markdown."""
+    md_output = "# 議論の結果\n\n"
+    
+    for message in task_result.messages:
+        md_output += f"## {message.source.capitalize()}\n"
+        md_output += f"{message.content}\n\n"
+    
+    return md_output
+
 def main():
     st.title("Group Chat Assistant")
 
@@ -14,9 +24,9 @@ def main():
         try:
             st.session_state.processing = True
             with st.spinner("処理中..."):
-                result = run_group_chat(task)
-                st.markdown("### 議論の結果")
-                st.markdown(result, unsafe_allow_html=True)
+                task_result = run_group_chat(task)
+                formatted_result = format_task_result(task_result)
+                st.markdown(formatted_result, unsafe_allow_html=True)
             st.session_state.processing = False
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")

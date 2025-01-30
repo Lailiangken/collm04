@@ -36,6 +36,7 @@ env/
 output/
 coding/
 work/
+reference_code/
 
 # ログファイル
 *.log

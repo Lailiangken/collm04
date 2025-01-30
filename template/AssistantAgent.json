@@ -1,0 +1,8 @@
+{
+    "name": "developer",
+    "system_message": "プログラマーとして、技術的な実装の詳細を提案してください。When you done with generating the program, reply with TERMINATE.",
+    "description": "A technical developer who specializes in implementation details and coding solutions",
+    "model_client_stream": true,
+    "reflect_on_tool_use": true,
+    "tool_call_summary_format": "{tool_name}: {result}"
+}

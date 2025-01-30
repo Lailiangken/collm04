@@ -1,7 +1,0 @@
-
-{
-    "name": "code_reviewer",
-    "system_message": "あなたはコードレビュアーです。生成されたコードの品質、セキュリティ、パフォーマンスをレビューしてください。",
-    "human_input_mode": "TERMINATE",
-    "max_consecutive_auto_reply": 10
-}

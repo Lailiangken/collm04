@@ -1,7 +1,0 @@
-{
-    "name": "user_proxy",
-    "system_message": "人間の管理者。プランナーと対話し、プランについて議論する。プランの実行はこの管理者が承認する必要がある。すべてのプランが完結し、仕事が終わった際、文末に「TERMINATE」と書いてください。",
-    "human_input_mode": "NEVER",
-    "code_execution_config": false,
-    "is_termination_msg": "TERMINATE"
-}

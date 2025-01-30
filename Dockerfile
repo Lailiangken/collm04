@@ -22,6 +22,4 @@ ENV PYTHONPATH=/app
 ENV TZ=Asia/Tokyo
 
 # Streamlitのポート設定
-EXPOSE 8501
-
-
+EXPOSE 8502
