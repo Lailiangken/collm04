@@ -1,7 +1,6 @@
-  version: '3.8'
-
   services:
     app:
+      user: "root:root"  # rootユーザーとして実行
       build: 
         context: .
         dockerfile: Dockerfile
@@ -10,10 +9,9 @@
       privileged: true  # コンテナがホストのDockerデーモンにアクセスできるようにする
       ports:
         - "8502:8502"
+
       volumes:
-        - type: bind
-          source: /var/run/docker.sock
-          target: /var/run/docker.sock
+        - /var/run/docker.sock:/var/run/docker.sock
         - type: bind
           source: .
           target: /app
@@ -23,9 +21,8 @@
       env_file:
         - .env
       environment:
-        - STREAMLIT_SERVER_ADDRESS=0.0.0.0
         - DOCKER_HOST=unix:///var/run/docker.sock
-
+        - DOCKER_TLS_CERTDIR=""
       command: streamlit run group_chat_app.py --server.address=0.0.0.0 --server.port 8502
       networks:
         - app-network

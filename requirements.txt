@@ -4,6 +4,7 @@ langchain-community
 pandas
 python-dotenv
 openai
+asyncio_atexit
 
 # UI
 streamlit

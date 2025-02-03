@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-
+RUN groupmod -g 989 docker && \
+    usermod -aG docker root
 
 
 WORKDIR /app
