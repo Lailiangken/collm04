@@ -1,98 +1,79 @@
-# COLLM - Code Assistant
-以下は自動生成で作成しています
+# Group Chat Assistant
 
-コードレビューとコード生成を支援するAIアシスタントツール
+このプロジェクトは、Autogen(0.4.*)を利用したPythonコード作成補助用のグループチャットアシスタントを提供します。  
+Streamlitを使用したWebインターフェースで、通常チャットとコード実行チャットの2つのモードを提供します。  
+作者はこれをWSL2環境で開発しているので、他の環境での動作は確認していません。
 
-## 環境構築
+## 機能
 
-### 必要条件
-- Python 3.9以上
-- Docker
-- OpenAI API Key
-（製作者はWSL環境で作成しているので、以降の手順はWSL環境での作業を想定しています）
+**通常チャット**: 複数のAIエージェントによる対話型チャット
+**コード実行チャット**: Pythonコードの生成と実行が可能なチャット
+## 必要条件
 
-### Dockerを使った起動方法
+Docker  
+Docker Compose  
+OpenAI API Key  
+## インストール
 
-## 1. Dockerのインストール
+**リポジトリをクローン**: プロジェクトのリポジトリをローカルマシンにクローンします。
 
-sudo apt update
-sudo apt install docker-ce docker-ce-cli containerd.io
-sudo apt install docker-compose
+```bash git clone https://github.com/yourusername/collm04.git cd collm04 ```
 
+**環境変数の設定**: プロジェクトのルートディレクトリに `.env` ファイルを作成し、以下の内容を設定します。WORK_DIR はホストマシン上の作業ディレクトリを指定し、OPENAI_API_KEY にはOpenAIのAPIキーを設定してください。
 
-## 2. 環境変数の設定
+``` WORK_DIR="/path/to/your/workspace" OPENAI_API_KEY="your-api-key" ```
 
-### .envファイルの作成
-プロジェクトルートに`.env`ファイルを作成し、以下の内容を設定します:
-OPENAI_API_KEY=your_api_key
+**Dockerイメージのビルド**: Docker Composeを使用して、必要なDockerイメージをビルドします。
 
-あるいは、以下のコマンドを実行して環境変数を設定します:
-export OPENAI_API_KEY=your_api_key
+```bash docker-compose build ```
 
+## 使用方法
 
-## 3. アプリケーションの起動
+**アプリケーションの起動**: Docker Composeを使用してアプリケーションを起動します。これにより、必要なコンテナが立ち上がり、アプリケーションが実行されます。
 
-### Dockerイメージのビルド
-```bash
-docker-compose build --no-cache
+```bash docker-compose up ```
 
-### Dockerコンテナの起動
-docker-compose up
+-d オプションを付けると、バックグラウンドでコンテナを実行できます。
+**アプリケーションへのアクセス**: ブラウザで以下のURLにアクセスして、Streamlitのインターフェースを使用します。
 
-### Dockerコンテナの停止
-docker-compose down
+``` http://localhost:8502 ```
+
+**インターフェースの使用**:
+
+チャットモードを選択（通常チャット/コード実行チャット）  
+タスクや質問を入力  
+"実行"ボタンをクリック  
+**アプリケーションの停止**: アプリケーションを停止するには、以下のコマンドを使用します。
+
+```bash docker-compose down ```
+
+## プロジェクト構成
+
+``` 
+collm04/ 
+├── autogen_functions/ 
+│ └── group_chat/ 
+│     └──agents/
+│     │   └── (各エージェント情報).json
+│     └── group_chat_043.py 
+├── autogen_setting/
+│ └── models/
+│     └── gpt-4o_1.json
+├── group_chat_app.py 
+├── Dockerfile 
+├── docker-compose.yml 
+├── requirements.txt 
+└── .env 
 ```
 
-## 4. アプリケーションの使用方法
+## 主要コンポーネント
 
-### Webインターフェースへのアクセス
-- ブラウザで http://localhost:8501 を開く
-- Streamlitベースの直感的なUIが表示されます
+`group_chat_app.py`: Streamlitベースのメインアプリケーション  
+`group_chat_043.py`: グループチャットのコア機能  
+`Dockerfile`: アプリケーションのコンテナ化設定  
+`docker-compose.yml`: マルチコンテナ設定  
 
-### 基本機能
-1. コードレビュー
-   - Pythonコードを入力
-   - AIによる詳細なレビューと改善提案を取得
-   - 結果はMarkdown形式で表示
+Docker周りについては作者もだいぶ苦戦したので、うまく動作しなければ教えてください。
 
-2. コード生成
-   - 要件を自然言語で入力
-   - AIが要件に基づいてPythonコードを生成
-   - 生成されたコードはシンタックスハイライト付きで表示
-
-### 出力管理
-- すべての結果は`output`ディレクトリに自動保存
-- ディレクトリ構造:
-collm/ 
-├── app.py                      # Streamlitメインアプリケーション
-├── code_review.py             # コードレビュー機能
-├── get_chat_response.py       # OpenAI API通信
-├── autogen_functions/         # 自動生成機能
-│   └── factory.py            # 機能生成ファクトリー
-│
-├── docker/                    # Docker関連
-│   ├── Dockerfile            # Dockerイメージ定義
-│   └── docker-compose.yml    # Docker環境設定
-│
-├── requirements.txt          # 依存パッケージ一覧
-├── .env                      # 環境変数設定
-├── .gitignore               # Git除外設定
-├── README.md                # プロジェクト説明
-│
-└── output/                  # 生成結果の出力先
-    ├── code_review/         # レビュー結果
-    │   └── YYYYMMDD_HHMMSS_query/
-    │       ├── generated_result.md
-    │       ├── query.txt
-    │       └── conversation.txt
-    │
-    └── code_generator/      # コード生成結果
-        └── YYYYMMDD_HHMMSS_query/
-            ├── generated_result.py
-            ├── query.txt
-            └── conversation.txt
-
-### 高度な使用方法
-- APIキーの動的変更が可能
-- 生成結果の履歴管理
-- 会話ログの保存と参照
+## 実行例
+[Sample](sample.pdf)
