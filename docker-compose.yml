@@ -1,23 +1,20 @@
   services:
     app:
-      user: "root:root"  # rootユーザーとして実行
+      user: "root:root"
       build: 
         context: .
         dockerfile: Dockerfile
       image: collm-app
       container_name: collm-app
-      privileged: true  # コンテナがホストのDockerデーモンにアクセスできるようにする
+      privileged: true
       ports:
         - "8502:8502"
-
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
+        - ${WORK_DIR}:/workspace:rw
         - type: bind
           source: .
           target: /app
-        - type: volume
-          source: workspace
-          target: /workspace
       env_file:
         - .env
       environment:

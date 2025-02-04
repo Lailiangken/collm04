@@ -14,6 +14,12 @@ def format_task_result(task_result):
 def main():
     st.title("Group Chat Assistant")
 
+    # チャットモードの選択
+    chat_mode = st.selectbox(
+        "チャットモードを選択してください:",
+        ["通常チャット", "コード実行チャット"]
+    )
+
     task = st.text_area("議論するタスクや話題を入力してください:", height=200)
 
     if 'processing' not in st.session_state:
@@ -24,7 +30,7 @@ def main():
         try:
             st.session_state.processing = True
             with st.spinner("処理中..."):
-                task_result = run_group_chat(task)
+                task_result = run_group_chat(task, chat_mode=chat_mode)
                 formatted_result = format_task_result(task_result)
                 st.markdown(formatted_result, unsafe_allow_html=True)
             st.session_state.processing = False
