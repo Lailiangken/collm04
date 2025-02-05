@@ -2,7 +2,8 @@ import logging
 import streamlit as st
 import json
 from pathlib import Path
-from autogen_functions.group_chat.group_chat_043 import run_group_chat
+from autogen_functions.group_chat.group_chat import run_group_chat
+import shutil
 
 # Custom Streamlit logging handler
 class StreamlitHandler(logging.Handler):
@@ -18,14 +19,15 @@ class StreamlitHandler(logging.Handler):
         self.log_area.markdown(f"\n{self.log_data}\n")
 
 
-def create_new_agent_config(agent_name,group_name):
-    config_path = Path("autogen_functions/group_chat")/ group_name /"agents"/ f"{agent_name}_config.json"
+def create_new_agent_config(agent_name, group_name):
+    config_path = Path("autogen_functions/group_chat") / group_name / "agents" / f"{agent_name}_config.json"
     if config_path.exists():
         raise FileExistsError(f"エージェント '{agent_name}' は既に存在します")
     
     default_config = {
         "name": agent_name,
-        "system_message": "新しいエージェントのシステムメッセージをここに入力してください"
+        "system_message": "新しいエージェントのシステムメッセージをここに入力してください",
+        "description": "エージェントの説明をここに入力してください"
     }
     
     save_agent_config(config_path, default_config)
@@ -56,6 +58,22 @@ def delete_group(group_name):
         return True
     except Exception:
         return False
+
+def duplicate_group(source_group_name, new_group_name):
+    source_group_dir = Path("autogen_functions/group_chat") / source_group_name
+    new_group_dir = Path("autogen_functions/group_chat") / new_group_name
+
+    if not source_group_dir.exists():
+        raise FileNotFoundError(f"ソースグループ '{source_group_name}' が存在しません")
+    
+    if new_group_dir.exists():
+        raise FileExistsError(f"グループ '{new_group_name}' は既に存在します")
+
+    try:
+        shutil.copytree(source_group_dir, new_group_dir)
+        return True
+    except Exception as e:
+        raise RuntimeError(f"グループの複製に失敗しました: {e}")
 
 def get_available_groups():
     group_dir = Path("autogen_functions/group_chat")
@@ -94,11 +112,12 @@ def format_task_result(task_result):
 
 def main():
     st.title("Group Chat Assistant")
-
+    st.markdown("このグループチャットでは、SelectorGroupChatを利用しています。なので、グループチャットのつぎの発話者は、メンバーのうち最も適切である(とLLMが判断した)メンバーになります。")
     with st.sidebar:
         st.header("グループ設定")
         # グループ選択
         available_groups = get_available_groups()
+        
         if not available_groups:
             st.warning("利用可能なグループがありません")
             return        
@@ -107,18 +126,31 @@ def main():
         selected_group = st.selectbox(
             "読み込むグループを選択",
             available_groups,
-            index=available_groups.index("Agents") if "Agents" in available_groups else 0
+            index=available_groups.index("default") if "default" in available_groups else 0
         )
+        
 
+        
 
-
-        with st.expander("グループ追加/削除", expanded=True):
+        with st.expander("グループ複製/追加/削除", expanded=True):
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                duplicate_group_name = st.text_input("複製先のグループ名", key="duplicate_group_input",
+                                                    label_visibility="collapsed",
+                                                    placeholder="新しいグループ名を入力")
+            with col2:
+                if st.button("グループを複製", key="duplicate_group"):
+                    if duplicate_group(selected_group,duplicate_group_name):
+                            st.success(f"グループ '{selected_group}' を複製し、'{duplicate_group_name}' として保存しました")
+                            st.rerun()
+                    else :
+                        st.error("グループの複製に失敗しました")
             col1, col2 = st.columns([2, 1])
             with col1:
                 new_group_name = st.text_input("新規グループ名", key="new_group_input", 
                                              label_visibility="collapsed", 
                                              placeholder="新規グループ名を入力")
-                selected_group = st.selectbox(
+                selected_delete_group = st.selectbox(
                     "削除するグループを選択",
                     available_groups,
                     label_visibility="collapsed", 
@@ -136,19 +168,23 @@ def main():
                             st.error(str(e))
                     else:
                         st.error("グループ名を入力してください")
-                if selected_group != "Default":  # Agentsグループは削除できないように保護
+                if selected_delete_group != "default":  # Defaultグループは削除できないように保護
                     if st.button("グループを削除", key="delete_group"):
-                        if delete_group(selected_group):
+                        if delete_group(selected_delete_group):
                             st.success(f"グループ '{selected_group}' を削除しました")
                             st.rerun()
                         else:
                             st.error("グループの削除に失敗しました")
+                else:
+                    st.button("グループを削除", key="delete_group", disabled=True)
+            st.markdown("defaultグループは削除できません。")
 
 
 
  
         st.header("エージェント設定")
-        
+        st.markdown("defaultグループのエージェントは編集できません。")
+
         # 既存のエージェント設定部分
         agent_configs = load_agent_configs(selected_group)
         if agent_configs:
@@ -166,33 +202,40 @@ def main():
                         height=200,
                         key=f"{agent_name}_system_message"
                     )
-                    col1, col2, col3 = st.columns([1, 1,2])
+                    new_description = st.text_area(
+                        "Description",
+                        config_data["data"].get("description", ""),
+                        height=100,
+                        key=f"{agent_name}_description"
+                    )
+                    col1, col2, col3 = st.columns([1, 1, 2])
                     with col1:
-                        if st.button("設定を保存", key=f"{agent_name}_save"):
+                        if st.button("設定を保存", key=f"{agent_name}_save", disabled=selected_group=="default"):
                             updated_config = {
                                 "name": new_name,
-                                "system_message": new_system_message
+                                "system_message": new_system_message,
+                                "description": new_description
                             }
                             save_agent_config(config_data["path"], updated_config)
                             st.success(f"{agent_name}の設定を保存しました")
                     with col2:
-                        if st.button("Agentを削除", key=f"{agent_name}_delete"):
+                        if st.button("Agentを削除", key=f"{agent_name}_delete", disabled=selected_group=="default"):
                             if delete_agent_config(config_data["path"]):
                                 st.success(f"{agent_name}を削除しました")
                                 st.rerun()
                             else:
                                 st.error("削除に失敗しました")
                     with col3:
-                        st.markdown("")
+                        st.markdown("")       
         else:
             st.info("このグループにはエージェントが存在しません。新しいエージェントを追加してください。")        
-            with st.expander("エージェント追加", expanded=True):
-                col1, col2 = st.columns([2, 1])
+        with st.expander("エージェント追加", expanded=True):
+            col1, col2 = st.columns([2, 1])
             with col1:
                 new_agent_name = st.text_input("新規エージェント名", key="new_agent_input", label_visibility="collapsed", placeholder="エージェント名を入力")
             with col2:
-           
-                if st.button("Agentを追加", key="add_agent"):
+            
+                if st.button("Agentを追加", key="add_agent",disabled=selected_group=="default"):
                     if new_agent_name:
                         try:
                             create_new_agent_config(new_agent_name,selected_group)
@@ -202,7 +245,7 @@ def main():
                             st.error(str(e))
                     else:
                         st.error("エージェント名を入力してください")                     
-                         # ログの表示をサイドバーの下に追加
+                            # ログの表示をサイドバーの下に追加
         st.header("ログ")
         
         with st.expander("ログを表示/非表示", expanded=False):
@@ -230,7 +273,7 @@ def main():
             with st.spinner("処理中..."):
                 logger = logging.getLogger(__name__)
                 logger.info("タスクを実行中: %s", task)
-                task_result = run_group_chat(task, chat_mode=chat_mode)
+                task_result = run_group_chat(task, group_name=selected_group, chat_mode=chat_mode)
                 formatted_result = format_task_result(task_result)
                 st.markdown(formatted_result, unsafe_allow_html=True)
             st.session_state.processing = False
