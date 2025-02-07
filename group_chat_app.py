@@ -256,10 +256,26 @@ def main():
             root_logger.setLevel(logging.INFO)
             root_logger.addHandler(streamlit_handler)
 
+    st.title("Group Chat Assistant")
+    st.markdown("グループチャットでは、SelectorGroupChatまたはMagenticOneGroupChatを選択できます。")
+    
+    # チャットタイプの選択を追加
+    chat_type = st.selectbox(
+        "チャットタイプを選択してください:",
+        ["selector", "magnetic"],
+        format_func=lambda x: "Selector Chat" if x == "selector" else "Magnetic Chat"
+    )
+
     chat_mode = st.selectbox(
         "チャットモードを選択してください:",
         ["通常チャット", "コード実行チャット"]
     )
+
+    # チャットタイプの説明を追加
+    if chat_type == "selector":
+        st.info("Selector Chat: グループチャットのつぎの発話者は、メンバーのうち最も適切である(とLLMが判断した)メンバーになります。")
+    else:
+        st.info("Magnetic Chat: Orchestratorが主導して、タスクを小さなステップに分解し、適切なエージェントに割り当てて実行します。")
 
     task = st.text_area("議論するタスクや話題を入力してください:", height=200)
 
@@ -273,7 +289,12 @@ def main():
             with st.spinner("処理中..."):
                 logger = logging.getLogger(__name__)
                 logger.info("タスクを実行中: %s", task)
-                task_result = run_group_chat(task, group_name=selected_group, chat_mode=chat_mode)
+                task_result = run_group_chat(
+                    task, 
+                    group_name=selected_group, 
+                    chat_mode=chat_mode,
+                    chat_type=chat_type
+                )
                 formatted_result = format_task_result(task_result)
                 st.markdown(formatted_result, unsafe_allow_html=True)
             st.session_state.processing = False

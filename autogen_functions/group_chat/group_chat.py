@@ -2,7 +2,7 @@ import asyncio
 import os
 import logging
 from autogen_core import SingleThreadedAgentRuntime, EVENT_LOGGER_NAME
-from autogen_agentchat.teams import SelectorGroupChat
+from autogen_agentchat.teams import SelectorGroupChat, MagenticOneGroupChat
 from autogen_agentchat.conditions import TextMentionTermination
 from autogen_functions.load_agents import load_agents_from_directory
 from autogen_functions.load_model import load_model_from_config
@@ -10,17 +10,15 @@ from autogen_functions.logging_agents import LoggingAssistantAgent, LoggingUserP
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 from autogen_agentchat.agents import CodeExecutorAgent
 
-# ログの設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(EVENT_LOGGER_NAME)
 
 class GroupChatExample:
-    def __init__(self, group_name: str = "Agents", chat_mode: str = "通常チャット"):
+    def __init__(self, group_name: str = "Agents", chat_mode: str = "通常チャット", chat_type: str = "selector"):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         agents_dir = os.path.join(current_dir, group_name, "agents")
         
         self.model_client = load_model_from_config("gpt-4o_1")
-        # 指定されたグループのディレクトリからエージェントをロード
         self.agents = load_agents_from_directory(agents_dir, self.model_client, agent_class=LoggingAssistantAgent)
         self.runtime = SingleThreadedAgentRuntime()
         
@@ -46,11 +44,12 @@ class GroupChatExample:
 
         self.termination = TextMentionTermination("TERMINATE")
         
-        self.team = SelectorGroupChat(
-            participants=participants,
-            model_client=self.model_client,
-            termination_condition=self.termination,
-            selector_prompt="""You are in a role play game. The following roles are available:
+        if chat_type == "selector":
+            self.team = SelectorGroupChat(
+                participants=participants,
+                model_client=self.model_client,
+                termination_condition=self.termination,
+                selector_prompt="""You are in a role play game. The following roles are available:
 {roles}.
 Read the following conversation. Then select the next role from {participants} to play. Only return the role.
 
@@ -58,8 +57,13 @@ Read the following conversation. Then select the next role from {participants} t
 
 Read the above conversation. Then select the next role from {participants} to play. Only return the role.
 """,
-            allow_repeated_speaker=False
-        )
+                allow_repeated_speaker=False
+            )
+        else:  # magentic
+            self.team = MagenticOneGroupChat(
+                participants=participants,
+                model_client=self.model_client,
+            )
 
     async def start_discussion(self, task: str) -> str:
         logger.info("チャットを開始します...")
@@ -71,11 +75,16 @@ Read the above conversation. Then select the next role from {participants} to pl
         logger.info("チャットが終了しました。")
         return result
 
-def run_group_chat(task: str, group_name: str = "Agents", chat_mode: str = "通常チャット") -> str:
-    chat = GroupChatExample(group_name=group_name, chat_mode=chat_mode)
+def run_group_chat(task: str, group_name: str = "Agents", chat_mode: str = "通常チャット", chat_type: str = "selector") -> str:
+    chat = GroupChatExample(group_name=group_name, chat_mode=chat_mode, chat_type=chat_type)
     return asyncio.run(chat.start_discussion(task))
 
 if __name__ == "__main__":
     task = "Pythonを使って'Hello, World!'を出力するプログラムを作成し、実行してください。"
-    result = run_group_chat(task)
-    print(result)
+    # セレクターチャットの実行
+    result_selector = run_group_chat(task, chat_type="selector")
+    print("Selector Chat Result:", result_selector)
+    
+    # magenticチャットの実行
+    result_magentic = run_group_chat(task, chat_type="magentic")
+    print("magentic Chat Result:", result_magentic)
