@@ -23,6 +23,12 @@ COPY . .
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
+
+RUN python /usr/local/lib/python3.12/site-packages/playwright install
+
+RUN playwright install-deps
+
+
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 ENV TZ=Asia/Tokyo

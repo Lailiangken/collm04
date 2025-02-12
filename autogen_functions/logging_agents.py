@@ -3,7 +3,7 @@ from autogen_agentchat.agents import AssistantAgent, UserProxyAgent
 from autogen_core import EVENT_LOGGER_NAME
 
 # TRACEログの設定
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(EVENT_LOGGER_NAME)
 
 def log_event(messages, response_content):

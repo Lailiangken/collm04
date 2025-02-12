@@ -13,7 +13,8 @@ streamlit
 autogen-core
 autogen-agentchat
 autogen-ext[openai,azure]
-autogen-ext[docker]
+autogen-ext[docker,web-surfer]
+playwright
 
 # Docker related
 PyYAML<7.0,>=5.4

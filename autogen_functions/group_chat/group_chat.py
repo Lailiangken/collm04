@@ -9,20 +9,22 @@ from autogen_functions.load_model import load_model_from_config
 from autogen_functions.logging_agents import LoggingAssistantAgent, LoggingUserProxyAgent
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 from autogen_agentchat.agents import CodeExecutorAgent
+from autogen_ext.agents.web_surfer import MultimodalWebSurfer
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(EVENT_LOGGER_NAME)
 
 class GroupChatExample:
-    def __init__(self, group_name: str = "Agents", chat_mode: str = "通常チャット", chat_type: str = "selector"):
+    def __init__(self, group_name: str = "Agents", use_web_surfer: bool = False, use_code_executor: bool = False, chat_type: str = "selector"):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         agents_dir = os.path.join(current_dir, group_name, "agents")
         
         self.model_client = load_model_from_config("gpt-4o_1")
         self.agents = load_agents_from_directory(agents_dir, self.model_client, agent_class=LoggingAssistantAgent)
         self.runtime = SingleThreadedAgentRuntime()
-        
-        if chat_mode == "コード実行チャット":
+        participants = self.agents.copy()
+
+        if use_code_executor:
             host_work_dir = os.getenv('WORK_DIR', '/default/path')
             container_work_dir = 'workspace'
             
@@ -38,9 +40,16 @@ class GroupChatExample:
                 code_executor=self.code_executor,
                 description="Executes Python code and returns the output."
             )
-            participants = self.agents + [self.code_executor_agent]
-        else:
-            participants = self.agents
+            participants.append(self.code_executor_agent)
+            
+        if use_web_surfer:
+            self.web_surfer = MultimodalWebSurfer(
+                "web_surfer",
+                description="A web surfer that can search the web and return the results.",
+                model_client=self.model_client
+            )
+            participants.append(self.web_surfer)
+            
 
         self.termination = TextMentionTermination("TERMINATE")
         
@@ -75,10 +84,20 @@ Read the above conversation. Then select the next role from {participants} to pl
         logger.info("チャットが終了しました。")
         return result
 
-def run_group_chat(task: str, group_name: str = "Agents", chat_mode: str = "通常チャット", chat_type: str = "selector") -> str:
-    chat = GroupChatExample(group_name=group_name, chat_mode=chat_mode, chat_type=chat_type)
+def run_group_chat(
+    task: str, 
+    group_name: str = "Agents", 
+    use_web_surfer: bool = False, 
+    use_code_executor: bool = False, 
+    chat_type: str = "selector"
+) -> str:
+    chat = GroupChatExample(
+        group_name=group_name,
+        use_web_surfer=use_web_surfer,
+        use_code_executor=use_code_executor,
+        chat_type=chat_type
+    )
     return asyncio.run(chat.start_discussion(task))
-
 if __name__ == "__main__":
     task = "Pythonを使って'Hello, World!'を出力するプログラムを作成し、実行してください。"
     # セレクターチャットの実行
