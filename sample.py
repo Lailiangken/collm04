@@ -1,19 +1,24 @@
-import streamlit as st
-import time
-from datetime import datetime
+from autogen_agentchat.agents import AssistantAgent
+from autogen_agentchat.teams import RoundRobinGroupChat
+from autogen_agentchat.ui import Console
+from autogen_ext.models.openai import OpenAIChatCompletionClient
+import asyncio
 
-# A complex function using logging
-def complex_function(log_area):
-    log_data = ""
-    for i in range(5):
-        log_line = f'{datetime.now()} - INFO - Processing {i}\n'
-        log_data += log_line
-        log_area.markdown(f"```\n{log_data}\n```")  # Display logs using markdown
-        time.sleep(1)  # Simulate processing time
+# Create the agents.
+model_client = OpenAIChatCompletionClient(model="gpt-4o-mini")
+assistant = AssistantAgent("assistant", model_client=model_client)
 
-# Streamlit UI setup
-st.title("Display Logger in Streamlit")
+# Create the team setting a maximum number of turns to 1.
+team = RoundRobinGroupChat([assistant], max_turns=1)
 
-if st.button('Run Complex Function'):
-    log_area = st.empty()  # Placeholder for text_area update
-    complex_function(log_area)
+async def main():
+    task = "あなたはコールセンターのオペレーターです。ユーザがいると仮定して、その職位、メールアドレス、電話番号を聞き出してください。"
+    while True:
+        stream = team.run_stream(task=task)
+        await Console(stream)
+        task = input("Enter your feedback (type 'exit' to leave): ")
+        if task.lower().strip() == "exit":
+            break
+
+if __name__ == "__main__":
+    asyncio.run(main())     
