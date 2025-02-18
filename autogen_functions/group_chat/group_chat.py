@@ -10,6 +10,7 @@ from autogen_functions.logging_agents import LoggingAssistantAgent, LoggingUserP
 from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 from autogen_agentchat.agents import CodeExecutorAgent
 from autogen_ext.agents.web_surfer import MultimodalWebSurfer
+from autogen_agentchat.base import TaskResult
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(EVENT_LOGGER_NAME)
@@ -107,3 +108,51 @@ if __name__ == "__main__":
     # magenticチャットの実行
     result_magentic = run_group_chat(task, chat_type="magentic")
     print("magentic Chat Result:", result_magentic)
+
+class GroupChatRunner:
+    def __init__(self):
+        self.message_callback = None
+        self.result_callback = None
+    
+    def set_callbacks(self, message_callback, result_callback):
+        self.message_callback = message_callback
+        self.result_callback = result_callback
+    
+    async def run_chat(self, task: str, chat_type: str, use_web_surfer: bool, use_code_executor: bool, group_name: str):
+        chat = GroupChatExample(
+            chat_type=chat_type,
+            use_web_surfer=use_web_surfer,
+            use_code_executor=use_code_executor,
+            group_name=group_name
+        )
+
+        
+        if hasattr(chat, 'code_executor'):
+            async with chat.code_executor:
+                stream = chat.team.run_stream(task=task)
+                return await self._process_stream(stream)
+        else:
+            stream = chat.team.run_stream(task=task)
+            return await self._process_stream(stream)
+
+
+    async def _process_stream(self, stream):
+        final_message = None
+        messages = []
+        try:
+            async for message in stream:
+                if isinstance(message, TaskResult):
+                    if message.messages:
+                        final_message = message.messages[-1]
+                        if self.result_callback:
+                            self.result_callback(final_message.content)
+                
+                if self.message_callback:
+                    await self.message_callback(message)  # awaitを追加
+                messages.append(message)
+            
+            return messages, final_message.content if final_message else None
+        except Exception as e:
+            # Handle the exception appropriately
+            print(f"An error occurred: {e}")
+            return messages, None
