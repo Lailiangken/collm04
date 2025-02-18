@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 
 def create_new_agent_config(agent_name, group_name):
-    config_path = Path("autogen_functions/group_chat") / group_name / "agents" / f"{agent_name}_config.json"
+    config_path = Path("groups") / group_name / "agents" / f"{agent_name}_config.json"
     if config_path.exists():
         raise FileExistsError(f"エージェント '{agent_name}' は既に存在します")
     
@@ -16,7 +16,7 @@ def create_new_agent_config(agent_name, group_name):
     return config_path
 
 def load_agent_configs(group_name):
-    agent_dir = Path("autogen_functions/group_chat") / group_name / "agents"
+    agent_dir = Path("groups") / group_name / "agents"
     configs = {}
     for config_file in agent_dir.glob("*_config.json"):
         with open(config_file, "r") as f:

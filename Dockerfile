@@ -28,6 +28,19 @@ RUN python /usr/local/lib/python3.12/site-packages/playwright install
 
 RUN playwright install-deps
 
+# Microsoft の署名キーを追加
+RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
+    gpg --dearmor | \
+    tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+
+# Azure CLI のリポジトリを追加
+RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | \
+    tee /etc/apt/sources.list.d/azure-cli.list
+
+# Azure CLI のインストール
+RUN apt-get update && apt-get install -y azure-cli
+
+
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app

@@ -5,6 +5,7 @@ pandas
 python-dotenv
 openai
 asyncio_atexit
+azure-identity
 
 # UI
 streamlit

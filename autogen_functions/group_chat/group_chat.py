@@ -16,10 +16,10 @@ logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(leve
 logger = logging.getLogger(EVENT_LOGGER_NAME)
 
 class GroupChatExample:
-    def __init__(self, group_name: str = "Agents", use_web_surfer: bool = False, use_code_executor: bool = False, chat_type: str = "selector"):
+    def __init__(self, group_name: str = "default", use_web_surfer: bool = False, use_code_executor: bool = False, chat_type: str = "selector"):
+        # エージェントディレクトリを groups/default/agents に設定
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        agents_dir = os.path.join(current_dir, group_name, "agents")
-        
+        agents_dir = os.path.join(current_dir, '..', '..', 'groups', group_name, 'agents')  # ここを変更
         self.model_client = load_model_from_config("gpt-4o_1")
         self.agents = load_agents_from_directory(agents_dir, self.model_client, agent_class=LoggingAssistantAgent)
         self.runtime = SingleThreadedAgentRuntime()
@@ -99,15 +99,7 @@ def run_group_chat(
         chat_type=chat_type
     )
     return asyncio.run(chat.start_discussion(task))
-if __name__ == "__main__":
-    task = "Pythonを使って'Hello, World!'を出力するプログラムを作成し、実行してください。"
-    # セレクターチャットの実行
-    result_selector = run_group_chat(task, chat_type="selector")
-    print("Selector Chat Result:", result_selector)
-    
-    # magenticチャットの実行
-    result_magentic = run_group_chat(task, chat_type="magentic")
-    print("magentic Chat Result:", result_magentic)
+
 
 class GroupChatRunner:
     def __init__(self):
@@ -156,3 +148,12 @@ class GroupChatRunner:
             # Handle the exception appropriately
             print(f"An error occurred: {e}")
             return messages, None
+if __name__ == "__main__":
+    task = "Pythonを使って'Hello, World!'を出力するプログラムを作成し、実行してください。"
+    # セレクターチャットの実行
+    result_selector = run_group_chat(task, chat_type="selector")
+    print("Selector Chat Result:", result_selector)
+    
+    # magenticチャットの実行
+    result_magentic = run_group_chat(task, chat_type="magentic")
+    print("magentic Chat Result:", result_magentic)
