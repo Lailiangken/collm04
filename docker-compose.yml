@@ -9,6 +9,7 @@
       privileged: true
       ports:
         - "8502:8502"
+        - "8503:8503"
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - ${WORK_DIR}:/workspace:rw

@@ -1,4 +1,0 @@
-id,example_type,content
-1,format,リスト: ['項目1', '項目2', '項目3']
-2,output_format,要素数: 3個
-3,output_format,確信度: 0.95

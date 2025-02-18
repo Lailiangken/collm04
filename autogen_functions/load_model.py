@@ -1,8 +1,8 @@
 import json
 import os
-from autogen_ext.models.openai import OpenAIChatCompletionClient
+from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
 
-def load_model_from_config(model_name: str) -> OpenAIChatCompletionClient:
+def load_model_from_config(model_name: str):
     """
     モデル名を指定してモデルクライアントを読み込む関数
     
@@ -10,9 +10,8 @@ def load_model_from_config(model_name: str) -> OpenAIChatCompletionClient:
         model_name (str): モデル設定ファイルの名前（拡張子なし）
 
     Returns:
-        OpenAIChatCompletionClient: 設定されたモデルクライアントのインスタンス
+        モデルクライアントのインスタンス
     """
-    # autogen_setting/models フォルダのパスを取得
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     models_dir = os.path.join(base_dir, "autogen_setting", "models")
     config_path = os.path.join(models_dir, f"{model_name}.json")
@@ -23,7 +22,23 @@ def load_model_from_config(model_name: str) -> OpenAIChatCompletionClient:
     with open(config_path, 'r', encoding='utf-8') as f:
         model_config = json.load(f)
     
-    # APIキーの処理
+    # Azure OpenAI モデルの設定
+    if model_config.get("provider") == "azure":
+        return AzureOpenAIChatCompletionClient(
+            azure_endpoint=model_config["azure_endpoint"],
+            azure_deployment=model_config["azure_deployment"],
+            model=model_config["model"],
+            api_version=model_config["api_version"],
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            model_info={
+                "vision": model_config.get("vision", False),
+                "function_calling": model_config.get("function_calling", True),
+                "json_output": model_config.get("json_output", True),
+                "family": model_config.get("family", "GPT_4")
+            }
+        )
+    
+    # OpenAI モデルの設定
     api_key = model_config.get("api_key")
     if api_key is None or api_key == "" or api_key.upper() == "ENV":
         api_key = os.environ.get("OPENAI_API_KEY")

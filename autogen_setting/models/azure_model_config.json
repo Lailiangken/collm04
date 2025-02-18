@@ -1,0 +1,13 @@
+{
+    "provider": "azure",
+    "azure_endpoint": "https://llm-deloitte-gpt4-verification.openai.azure.com/",
+    "azure_deployment": "gpt-4o",
+    "model": "gpt-4",
+    "api_version": "2024-06-01",
+    "vision": false,
+    "function_calling": true,
+    "json_output": true,
+    "family": "GPT_4",
+    "temperature": 0.7,
+    "max_tokens": 2000
+}
