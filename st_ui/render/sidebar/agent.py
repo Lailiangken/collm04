@@ -5,20 +5,25 @@ from ...functions.agent_config import (
     save_agent_config,
     delete_agent_config
 )
+from autogen_functions.tools_manager import ToolsManager
 
 def render_agent_settings(selected_group):
     st.header("エージェント設定")
     st.markdown("defaultグループのエージェントは編集できません。")
     
+    # ToolsManagerのインスタンス化
+    tools_manager = ToolsManager()
+    available_tools = tools_manager.list_available_functions()
+    
     agent_configs = load_agent_configs(selected_group)
     if agent_configs:
-        render_existing_agents(selected_group, agent_configs)
+        render_existing_agents(selected_group, agent_configs, available_tools)
     else:
         st.info("このグループにはエージェントが存在しません。新しいエージェントを追加してください。")
     
     render_agent_creation(selected_group)
 
-def render_existing_agents(selected_group, agent_configs):
+def render_existing_agents(selected_group, agent_configs, available_tools):
     agent_tabs = st.tabs(list(agent_configs.keys()))
     for tab, (agent_name, config_data) in zip(agent_tabs, agent_configs.items()):
         with tab:
@@ -40,13 +45,23 @@ def render_existing_agents(selected_group, agent_configs):
                 key=f"{agent_name}_description"
             )
             
+            # ツール選択機能の追加
+            st.subheader("Tools")
+            selected_tools = st.multiselect(
+                "Select Tools",
+                available_tools,
+                default=config_data["data"].get("tools", []),
+                key=f"{agent_name}_tools"
+            )
+            
             col1, col2, col3 = st.columns([1, 1, 2])
             with col1:
                 if st.button("設定を保存", key=f"{agent_name}_save", disabled=selected_group=="default"):
                     updated_config = {
                         "name": new_name,
                         "system_message": new_system_message,
-                        "description": new_description
+                        "description": new_description,
+                        "tools": selected_tools  # ツール設定を追加
                     }
                     save_agent_config(config_data["path"], updated_config)
                     st.success(f"{agent_name}の設定を保存しました")

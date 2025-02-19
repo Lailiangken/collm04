@@ -2,6 +2,20 @@ import json
 import os
 from autogen_ext.models.openai import OpenAIChatCompletionClient, AzureOpenAIChatCompletionClient
 
+def list_available_models() -> list[str]:
+    """
+    利用可能なモデル名のリストを返す関数
+    
+    Returns:
+        list[str]: 利用可能なモデル名のリスト（拡張子なし）
+    """
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    models_dir = os.path.join(base_dir, "autogen_setting", "models")
+    
+    # .jsonファイルを検索してモデル名を抽出
+    model_files = [f[:-5] for f in os.listdir(models_dir) if f.endswith('.json')]
+    return model_files
+
 def load_model_from_config(model_name: str):
     """
     モデル名を指定してモデルクライアントを読み込む関数
@@ -11,7 +25,7 @@ def load_model_from_config(model_name: str):
 
     Returns:
         モデルクライアントのインスタンス
-    """
+    """    
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     models_dir = os.path.join(base_dir, "autogen_setting", "models")
     config_path = os.path.join(models_dir, f"{model_name}.json")

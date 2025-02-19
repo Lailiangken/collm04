@@ -1,12 +1,39 @@
 import streamlit as st
+from pathlib import Path
 from ...functions.sidebar import create_new_group, duplicate_group, delete_group, get_available_groups
 
 def render_group_management(selected_group):
-    with st.expander("グループ複製/追加/削除", expanded=True):
+    with st.expander("グループ複製/追加/削除", expanded=False):
         render_group_duplication(selected_group)
         render_group_creation()
         render_group_deletion()
+        
         st.markdown("defaultグループは削除できません。")
+    with st.expander("デフォルトプロンプト設定", expanded=False):
+        render_default_prompt(selected_group)
+
+def render_default_prompt(selected_group):
+    st.subheader("デフォルトプロンプト設定")
+    prompt_path = Path(f"groups/{selected_group}/default_prompt.txt")
+    
+    # 現在のプロンプトを読み込む
+    current_prompt = ""
+    if prompt_path.exists():
+        current_prompt = prompt_path.read_text(encoding='utf-8')
+    
+    # プロンプト編集エリア
+    new_prompt = st.text_area(
+        "デフォルトプロンプト",
+        value=current_prompt,
+        height=200,
+        key="default_prompt_input"
+    )
+    
+    # 保存ボタン
+    if st.button("プロンプトを保存", key="save_prompt", disabled=selected_group=="default"):
+        prompt_path.parent.mkdir(parents=True, exist_ok=True)
+        prompt_path.write_text(new_prompt, encoding='utf-8')
+        st.success("デフォルトプロンプトを保存しました")
 
 def render_group_duplication(selected_group):
     col1, col2 = st.columns([2, 1])

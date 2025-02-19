@@ -54,11 +54,11 @@ def save_result(formatted_result, chat_info, last_result):
         st.success(f"結果を保存しました: {result_path}")
 
 def main():
-    selected_group = render_sidebar()
+    selected_group, selected_model = render_sidebar()  # selected_modelを受け取る
     if not selected_group:
         return
     
-    formatted_result, chat_info, last_result = render_main_content(selected_group)
+    formatted_result, chat_info, last_result = render_main_content(selected_group, selected_model)  # selected_modelを渡す
     if formatted_result:
         save_result(formatted_result, chat_info, last_result)
 

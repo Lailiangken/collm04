@@ -16,11 +16,11 @@ logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(leve
 logger = logging.getLogger(EVENT_LOGGER_NAME)
 
 class GroupChatExample:
-    def __init__(self, group_name: str = "default", use_web_surfer: bool = False, use_code_executor: bool = False, chat_type: str = "selector"):
+    def __init__(self, group_name: str = "default", use_web_surfer: bool = False, use_code_executor: bool = False, chat_type: str = "selector",model_name: str = "azure_gpt4o_1"):
         # エージェントディレクトリを groups/default/agents に設定
         current_dir = os.path.dirname(os.path.abspath(__file__))
         agents_dir = os.path.join(current_dir, '..', '..', 'groups', group_name, 'agents')  # ここを変更
-        self.model_client = load_model_from_config("gpt-4o_1")
+        self.model_client = load_model_from_config(model_name)
         self.agents = load_agents_from_directory(agents_dir, self.model_client, agent_class=LoggingAssistantAgent)
         self.runtime = SingleThreadedAgentRuntime()
         participants = self.agents.copy()
@@ -110,12 +110,13 @@ class GroupChatRunner:
         self.message_callback = message_callback
         self.result_callback = result_callback
     
-    async def run_chat(self, task: str, chat_type: str, use_web_surfer: bool, use_code_executor: bool, group_name: str):
+    async def run_chat(self, task: str, chat_type: str, use_web_surfer: bool, use_code_executor: bool, group_name: str,model_name: str):
         chat = GroupChatExample(
             chat_type=chat_type,
             use_web_surfer=use_web_surfer,
             use_code_executor=use_code_executor,
-            group_name=group_name
+            group_name=group_name,
+            model_name=model_name
         )
 
         
