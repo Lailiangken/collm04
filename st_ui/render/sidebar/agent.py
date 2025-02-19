@@ -10,7 +10,7 @@ from autogen_functions.tools_manager import ToolsManager
 def render_agent_settings(selected_group):
     st.header("エージェント設定")
     st.markdown("defaultグループのエージェントは編集できません。")
-    
+    render_agent_creation(selected_group)
     # ToolsManagerのインスタンス化
     tools_manager = ToolsManager()
     available_tools = tools_manager.list_available_functions()
@@ -21,7 +21,7 @@ def render_agent_settings(selected_group):
     else:
         st.info("このグループにはエージェントが存在しません。新しいエージェントを追加してください。")
     
-    render_agent_creation(selected_group)
+    
 
 def render_existing_agents(selected_group, agent_configs, available_tools):
     agent_tabs = st.tabs(list(agent_configs.keys()))
@@ -46,7 +46,6 @@ def render_existing_agents(selected_group, agent_configs, available_tools):
             )
             
             # ツール選択機能の追加
-            st.subheader("Tools")
             selected_tools = st.multiselect(
                 "Select Tools",
                 available_tools,
