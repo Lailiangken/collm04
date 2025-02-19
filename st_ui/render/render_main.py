@@ -5,6 +5,7 @@ from autogen_functions.group_chat.group_chat import GroupChatRunner
 from ..utils.formatters import format_task_result
 from .console_handler import StreamlitConsoleHandler
 import asyncio
+from pathlib import Path
 
 from autogen_functions.group_chat.group_chat import GroupChatExample
 
@@ -20,7 +21,13 @@ class StreamlitChatUI:
     def update_result(self, result):
         self.result_area.markdown(f"### 最終結果:\n{result}")
 
-def render_main_content(selected_group):
+def load_default_prompt(selected_group: str) -> str:
+    prompt_path = Path(f"groups/{selected_group}/default_prompt.txt")
+    if prompt_path.exists():
+        return prompt_path.read_text(encoding='utf-8')
+    return ""
+
+def render_main_content(selected_group, selected_model):  # selected_modelを受け取る
     st.title("Group Chat Assistant")
     st.markdown("グループチャットでは、SelectorGroupChatまたはMagenticOneGroupChatを選択できます。")
     
@@ -28,7 +35,14 @@ def render_main_content(selected_group):
     
     # 入力セクション
     chat_type, use_web_surfer, use_code_executor = render_chat_section()
-    task = st.text_area("議論するタスクや話題を入力してください:", height=200)
+    
+    # デフォルトプロンプトの読み込み
+    default_prompt = load_default_prompt(selected_group)
+    task = st.text_area(
+        "議論するタスクや話題を入力してください:", 
+        value=default_prompt,
+        height=200
+    )
     
     # 実行ボタンを入力欄の直後に配置
     start_button = st.button("実行")
@@ -54,7 +68,8 @@ def render_main_content(selected_group):
                 chat_type=chat_type,
                 use_web_surfer=use_web_surfer,
                 use_code_executor=use_code_executor,
-                group_name=selected_group
+                group_name=selected_group,
+                model_name=selected_model  # selected_modelを追加
             )
         )
 
@@ -68,4 +83,4 @@ def render_main_content(selected_group):
         
         return ui.console_handler.display_text, chat_info, last_result
     
-    return None, None, None   
+    return None, None, None    
