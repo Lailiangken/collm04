@@ -11,6 +11,8 @@ from autogen_ext.code_executors.docker import DockerCommandLineCodeExecutor
 from autogen_agentchat.agents import CodeExecutorAgent
 from autogen_ext.agents.web_surfer import MultimodalWebSurfer
 from autogen_agentchat.base import TaskResult
+from autogen_agentchat.messages import AgentEvent, ChatMessage, ModelClientStreamingChunkEvent
+
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(EVENT_LOGGER_NAME)
@@ -105,12 +107,26 @@ class GroupChatRunner:
     def __init__(self):
         self.message_callback = None
         self.result_callback = None
-    
-    def set_callbacks(self, message_callback, result_callback):
-        self.message_callback = message_callback
-        self.result_callback = result_callback
-    
-    async def run_chat(self, task: str, chat_type: str, use_web_surfer: bool, use_code_executor: bool, group_name: str,model_name: str):
+        self.display_text = ""
+        self.streaming_chunks = []
+        
+    def format_message_stream(self, message):
+        if isinstance(message, TaskResult):
+            if message.messages:
+                last_message = message.messages[-1]
+                return f"\n--- Final Result ---\n{last_message.content}\n"
+                
+        elif isinstance(message, ModelClientStreamingChunkEvent):
+            self.streaming_chunks.append(message.content)
+            return message.content
+            
+        else:
+            if self.streaming_chunks:
+                self.streaming_chunks.clear()
+                return "\n"
+            return f"\n--- {message.source} ---\n{message.content}\n"
+
+    async def stream_chat(self, task: str, chat_type: str, use_web_surfer: bool, use_code_executor: bool, group_name: str, model_name: str):
         chat = GroupChatExample(
             chat_type=chat_type,
             use_web_surfer=use_web_surfer,
@@ -118,37 +134,50 @@ class GroupChatRunner:
             group_name=group_name,
             model_name=model_name
         )
-
         
+        message_stream = ""
+        last_result = None
+        chat_history = []
+
         if hasattr(chat, 'code_executor'):
             async with chat.code_executor:
                 stream = chat.team.run_stream(task=task)
-                return await self._process_stream(stream)
+                async for message in stream:
+                    message_stream += self.format_message_stream(message)
+                    # 会話内容のみをchat_historyに追加
+                    if hasattr(message, 'content') and hasattr(message, 'source'):
+                        chat_history.append({
+                            'role': message.source,
+                            'content': message.content
+                        })
+                    if isinstance(message, TaskResult) and message.messages:
+                        last_result = message.messages[-1].content
+                    if self.message_callback:
+                        await self.message_callback(message_stream)
+                    if last_result and self.result_callback:
+                        self.result_callback(last_result)
         else:
             stream = chat.team.run_stream(task=task)
-            return await self._process_stream(stream)
-
-
-    async def _process_stream(self, stream):
-        final_message = None
-        messages = []
-        try:
             async for message in stream:
-                if isinstance(message, TaskResult):
-                    if message.messages:
-                        final_message = message.messages[-1]
-                        if self.result_callback:
-                            self.result_callback(final_message.content)
-                
+                message_stream += self.format_message_stream(message)
+                # 会話内容のみをchat_historyに追加
+                if hasattr(message, 'content') and hasattr(message, 'source'):
+                    chat_history.append({
+                        'role': message.source,
+                        'content': message.content
+                    })
+                if isinstance(message, TaskResult) and message.messages:
+                    last_result = message.messages[-1].content
                 if self.message_callback:
-                    await self.message_callback(message)  # awaitを追加
-                messages.append(message)
-            
-            return messages, final_message.content if final_message else None
-        except Exception as e:
-            # Handle the exception appropriately
-            print(f"An error occurred: {e}")
-            return messages, None
+                    await self.message_callback(message_stream)
+                if last_result and self.result_callback:
+                    self.result_callback(last_result)
+
+        return {
+            'message_stream': message_stream,
+            'chat_history': chat_history,
+            'last_result': last_result
+        }
 if __name__ == "__main__":
     task = "Pythonを使って'Hello, World!'を出力するプログラムを作成し、実行してください。"
     # セレクターチャットの実行

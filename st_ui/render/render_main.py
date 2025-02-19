@@ -1,25 +1,9 @@
 import streamlit as st
 import logging
-from .main.render_chat import render_chat_section
+from .main.render_chat_settings import render_chat_section
 from autogen_functions.group_chat.group_chat import GroupChatRunner
-from ..utils.formatters import format_task_result
-from .console_handler import StreamlitConsoleHandler
 import asyncio
 from pathlib import Path
-
-from autogen_functions.group_chat.group_chat import GroupChatExample
-
-class StreamlitChatUI:
-    def __init__(self, chat_area=None, result_area=None):
-        self.chat_area = chat_area or st.empty()
-        self.result_area = result_area or st.empty()
-        self.console_handler = StreamlitConsoleHandler(self.chat_area)
-    
-    async def update_chat(self, message):
-        await self.console_handler.handle_message(message)
-    
-    def update_result(self, result):
-        self.result_area.markdown(f"### 最終結果:\n{result}")
 
 def load_default_prompt(selected_group: str) -> str:
     prompt_path = Path(f"groups/{selected_group}/default_prompt.txt")
@@ -27,60 +11,71 @@ def load_default_prompt(selected_group: str) -> str:
         return prompt_path.read_text(encoding='utf-8')
     return ""
 
-def render_main_content(selected_group, selected_model):  # selected_modelを受け取る
+def render_main_content(selected_group, selected_model):
+    if 'is_running' not in st.session_state:
+        st.session_state.is_running = False
+    
     st.title("Group Chat Assistant")
     st.markdown("グループチャットでは、SelectorGroupChatまたはMagenticOneGroupChatを選択できます。")
     
     st.info(f"現在選択中のグループ: {selected_group}")
     
-    # 入力セクション
     chat_type, use_web_surfer, use_code_executor = render_chat_section()
     
-    # デフォルトプロンプトの読み込み
     default_prompt = load_default_prompt(selected_group)
     task = st.text_area(
         "議論するタスクや話題を入力してください:", 
         value=default_prompt,
-        height=200
+        height=200,
+        disabled=st.session_state.is_running
     )
     
-    # 実行ボタンを入力欄の直後に配置
-    start_button = st.button("実行")
+    if st.session_state.is_running:
+        st.write("処理中...")
+        start_button = st.button("実行", disabled=True)
+    else:
+        start_button = st.button("実行")
 
-    # 結果表示エリア
     result_area = st.empty()
     
-    # チャット進行状況エリア
     with st.expander("チャットの進行状況", expanded=True):
         chat_area = st.empty()
 
     if start_button:
-        ui = StreamlitChatUI(chat_area=chat_area, result_area=result_area)
+        st.session_state.is_running = True
         runner = GroupChatRunner()
-        runner.set_callbacks(
-            message_callback=ui.update_chat,
-            result_callback=ui.update_result
-        )
         
-        messages, last_result = asyncio.run(
-            runner.run_chat(
-                task=task,
-                chat_type=chat_type,
-                use_web_surfer=use_web_surfer,
-                use_code_executor=use_code_executor,
-                group_name=selected_group,
-                model_name=selected_model  # selected_modelを追加
+        async def update_chat(message_stream):
+            chat_area.markdown(message_stream)
+            
+        def update_result(result):
+            result_area.markdown(f"### 最終結果:\n{result}")
+        
+        runner.message_callback = update_chat
+        runner.result_callback = update_result
+        
+        try:
+            results = asyncio.run(
+                runner.stream_chat(
+                    task=task,
+                    chat_type=chat_type,
+                    use_web_surfer=use_web_surfer,
+                    use_code_executor=use_code_executor,
+                    group_name=selected_group,
+                    model_name=selected_model
+                )
             )
-        )
-
-        chat_info = {
-            "chat_type": chat_type,
-            "use_web_surfer": use_web_surfer,
-            "use_code_executor": use_code_executor,
-            "selected_group": selected_group,
-            "task": task
-        }
-        
-        return ui.console_handler.display_text, chat_info, last_result
-    
-    return None, None, None    
+            
+            chat_info = {
+                "chat_type": chat_type,
+                "use_web_surfer": use_web_surfer,
+                "use_code_executor": use_code_executor,
+                "selected_group": selected_group,
+                "task": task
+            }
+            
+            return results['message_stream'], chat_info, results['last_result']
+            
+        finally:
+            st.session_state.is_running = False
+    return None, None, None
