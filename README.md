@@ -17,26 +17,47 @@ OpenAI API Key
 
 **リポジトリをクローン**: プロジェクトのリポジトリをローカルマシンにクローンします。
 
-```bash git clone https://github.com/yourusername/collm04.git cd collm04 ```
+```bash 
+git clone https://github.com/yourusername/collm04.git 
+cd collm04 
+```
 
 **環境変数の設定**: プロジェクトのルートディレクトリに `.env` ファイルを作成し、以下の内容を設定します。WORK_DIR はホストマシン上の作業ディレクトリを指定し、OPENAI_API_KEY にはOpenAIのAPIキーを設定してください。
 
-``` WORK_DIR="/path/to/your/workspace" OPENAI_API_KEY="your-api-key" ```
+``` 
+WORK_DIR="/path/to/your/workspace" OPENAI_API_KEY="your-api-key"
+AZURE_OPENAI_API_KEY="your-api-key"
+```
 
 **Dockerイメージのビルド**: Docker Composeを使用して、必要なDockerイメージをビルドします。
 
-```bash docker-compose build ```
+```bash 
+docker-compose build 
+```
 
 ## 使用方法
 
 **アプリケーションの起動**: Docker Composeを使用してアプリケーションを起動します。これにより、必要なコンテナが立ち上がり、アプリケーションが実行されます。
 
-```bash docker-compose up ```
-
+```bash 
+docker-compose up 
+```
 -d オプションを付けると、バックグラウンドでコンテナを実行できます。
+```bash 
+docker-compose up -d
+```
+
+コンテナ内でコマンドを実行するには、バックグラウンドでコンテナを起動した状態で以下のコマンドを使用します。
+```bash 
+docker-compose exec app bash
+```
+
+
 **アプリケーションへのアクセス**: ブラウザで以下のURLにアクセスして、Streamlitのインターフェースを使用します。
 
-``` http://localhost:8502 ```
+``` 
+http://localhost:8502 
+```
 
 **インターフェースの使用**:
 
@@ -45,7 +66,9 @@ OpenAI API Key
 "実行"ボタンをクリック  
 **アプリケーションの停止**: アプリケーションを停止するには、以下のコマンドを使用します。
 
-```bash docker-compose down ```
+```bash 
+docker-compose down 
+```
 
 ## プロジェクト構成
 
@@ -80,5 +103,3 @@ Docker周りについては作者もだいぶ苦戦したので、うまく動�
 サンプルを見ればわかる通り、コード実行チャットにおいてはだいぶ無駄な会話が多いです。Agentを追加、編集したりすることで効率化ができると思います。  
 [動画](動作.pdf)  
 サイズの制限で途中からですが、(デコードされてない文字列が)Logとして流れる様子を見ることができます。  
-[Agent書き換え例](Agent書き換え例.png)  
-Agentの書き換え例です。
