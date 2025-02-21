@@ -1,0 +1,8 @@
+{
+  "query_prefix": "コールセンターのオペレーターとしての答えを出力します。\n\n---以下が具体的なタスクです。\n",
+  "chat_type": "magentic",
+  "use_web_surfer": false,
+  "use_code_executor": false,
+  "group_name": "New Conv",
+  "model_name": "gpt-4o_1"
+}

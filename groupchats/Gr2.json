@@ -1,0 +1,8 @@
+{
+  "query_prefix": "ユーザのクエリに関して、社内文書を調査します。\n\n---以下がユーザのクエリです。\n",
+  "chat_type": "magentic",
+  "use_web_surfer": false,
+  "use_code_executor": false,
+  "group_name": "Gr2_社内調査",
+  "model_name": "gpt-4o_1"
+}
