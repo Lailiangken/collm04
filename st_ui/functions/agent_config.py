@@ -19,7 +19,7 @@ def load_agent_configs(group_name):
     agent_dir = Path("groups") / group_name / "agents"
     configs = {}
     for config_file in agent_dir.glob("*_config.json"):
-        with open(config_file, "r") as f:
+        with open(config_file, "r", encoding="utf-8") as f:
             configs[config_file.stem] = {
                 "path": config_file,
                 "data": json.load(f)
@@ -27,7 +27,7 @@ def load_agent_configs(group_name):
     return configs
 
 def save_agent_config(file_path, config):
-    with open(file_path, "w") as f:
+    with open(file_path, "w",encoding="utf-8") as f:
         json.dump(config, f, indent=4, ensure_ascii=False)
 
 def delete_agent_config(file_path):
